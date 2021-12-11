@@ -1,39 +1,17 @@
-const Web3 = require('web3')
-const Queue = require('bee-queue')
+import webWallet from "libs/web-wallet";
+import abi from "ethjs-abi";
+import server from "libs/server";
+import sha256 from "js-sha256";
+import config from "libs/config";
 
-const {
-  Client,
-  CryptoUtils,
-  LoomProvider,
-  LocalAddress
-} = require('loom-js')
+// Setting up Web3
+const web3 = webWallet.getWallet()
+const ABI = JSON.parse(
+  '[{"constant":false,"inputs":[{"name":"_postId","type":"uint256"},{"name":"_text","type":"string"}],"name":"newComment","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"posts","outputs":[{"name":"text","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"commentFromAccount","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_text","type":"string"}],"name":"newPost","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"hasPosts","outputs":[{"name":"_hasPosts","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"comments","outputs":[{"name":"text","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"},{"name":"","type":"uint256"}],"name":"postsFromAccount","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"},{"name":"","type":"uint256"}],"name":"commentsFromPost","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"inputs":[],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"postId","type":"uint256"},{"indexed":false,"name":"commentId","type":"uint256"},{"indexed":false,"name":"owner","type":"address"}],"name":"NewPostAdded","type":"event"}]'
+)
+  const contractAddress =  config.getNetwork() == "mainnet" ? "4a79ad8dc23d17944fdc3dc9a9e8a7946d6df0d4" : "4a79ad8dc23d17944fdc3dc9a9e8a7946d6df0d4"
 
-const request = require('request-promise')
-const http = require('http')
-;(async function () {
-  // Setting up Loom client
-  const client = new Client(
-    'default',
-    'ws://127.0.0.1:46658/websocket',
-    'ws://127.0.0.1:46658/queryws',
-  )
-
-  client.on('error', (message => {
-    console.error('message', message)
-  }))
-
-  const privateKey = CryptoUtils.generatePrivateKey()
-  const publicKey = CryptoUtils.publicKeyFromPrivateKey(privateKey)
-  const from = LocalAddress.fromPublicKey(publicKey).toString()
-
-  // Setting up Web3 with LoomProvider
-  const web3 = new Web3(new LoomProvider(client, privateKey))
-  const ABI = [{"constant":false,"inputs":[{"name":"_postId","type":"uint256"},{"name":"_text","type":"string"}],"name":"newComment","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"posts","outputs":[{"name":"text","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"commentFromAccount","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_text","type":"string"}],"name":"newPost","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"hasPosts","outputs":[{"name":"_hasPosts","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"comments","outputs":[{"name":"text","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"},{"name":"","type":"uint256"}],"name":"postsFromAccount","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"},{"name":"","type":"uint256"}],"name":"commentsFromPost","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"inputs":[],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"postId","type":"uint256"},{"indexed":false,"name":"commentId","type":"uint256"},{"indexed":false,"name":"owner","type":"address"}],"name":"NewPostAdded","type":"event"}]
-
-  const loomContractAddress = await client.getContractAddressAsync('SimpleSocialNetwork')
-  const contractAddress = CryptoUtils.bytesToHexAddr(loomContractAddress.local.bytes)
-
-  // Instantiate contract
+  // Instantiate contractw
   this._contract = new web3.eth.Contract(ABI, contractAddress)
 
   // Creating message queues
